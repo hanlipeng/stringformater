@@ -15,7 +15,8 @@ String result = MailUtils.buildMailWithObjectParam(template, bean); \\ result="t
 ```
 可以传嵌套参数,会对bean,map,collection类型进行不同的处理,写法为  
 #{bean:xxxxx#{field}xxxx}  
-#{list:xxxxx#{bean:xxxx#{field}}xxxx} \\ 每一条list会构建为
+#{list:xxxxx#{bean:xxxx#{field}}xxxx} \\ 每一个元素会构建一条语句最后组成一整句
+#{map:xxxx#{key}xxxx}
 
 目前只对String和Number类会转化为字符串,如有需要可以在MailUtils 112行做拦截修改,在137行做不同类型的数据转化
 ``` java
