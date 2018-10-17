@@ -1,5 +1,14 @@
 # stringformater
 本意是想找个邮件的模板工具.找了很多没找到.就准备自己写一个;
+## 更新
+### 1.0
+添加了两个方法来处理null值和数据类型值处理的注册方法;  
+```java
+        MailUtils.registeNullFuntion(() -> "null");
+        MailUtils.registeDataDealFuntion(Long.class, o -> "Long " + o);
+        MailUtils.registeDataDealFuntion(Integer.class, o -> "Integer " + o);
+```
+
 ## 规则
 字符串中以'#{xxx}'的格式为基础做字符串替换;  
 ```java
