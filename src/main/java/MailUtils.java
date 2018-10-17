@@ -13,7 +13,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,14 +25,22 @@ import java.util.regex.Pattern;
  * @date 2018/10/16
  */
 public class MailUtils {
-    static Pattern paramPattern = Pattern.compile("(#\\{)([^}:]*)(:?)([\\s\\S]*)(}$)");
+    private static Pattern paramPattern = Pattern.compile("(#\\{)([^}:]*)(:?)([\\s\\S]*)(}$)");
+    private static Map<Class, Function> dataTypeFunction;
+    private static Set<Class> type;
+    private static Supplier<String> defaultNullFunction;
+    private static Supplier<String> nullFunction;
 
-    public static String buildMailWithObjectParam(String mailTemplate, Object param) {
-        return buildMail(mailTemplate, param);
+    static {
+        dataTypeFunction = new HashMap<>();
+        dataTypeFunction.put(String.class, Object::toString);
+        dataTypeFunction.put(Number.class, String::valueOf);
+        type = dataTypeFunction.keySet();
+        defaultNullFunction = () -> "";
     }
 
-    private static String buildMail(String mailTemplate, Object param) {
-        HashMap<Object, Map<String, Object>> bean = new HashMap<>();
+    public static String buildMail(String mailTemplate, Object param) {
+        HashMap<Object, Map<String, Object>> bean = new HashMap<>(8);
         if (param instanceof Collection) {
             StringBuilder mail = new StringBuilder();
             for (Object p : (Collection) param) {
@@ -109,7 +120,7 @@ public class MailUtils {
         BiFunction paramGetter;
         if (param instanceof Map) {
             paramGetter = (o, k) -> ((Map) o).get(k);
-        } else if (param instanceof String || param instanceof Number || param == null) {
+        } else if (type.stream().anyMatch(c -> c.isInstance(param))) {
             paramGetter = null;
         } else {
             paramGetter = (o, k) -> {
@@ -134,7 +145,22 @@ public class MailUtils {
         return paramGetter;
     }
 
-    public static String paramToString(Object param) {
-        return Optional.ofNullable(param).map(Object::toString).orElse("");
+    private static String paramToString(Object param) {
+        return Optional.ofNullable(param).map(o -> {
+             Function function = dataTypeFunction.get(param.getClass());
+             if (function == null) {
+                 Class type = MailUtils.type.stream().filter(t -> t.isInstance(param)).findAny().orElseThrow(() -> new RuntimeException("未找到处理方式"));
+                 function = dataTypeFunction.get(type);
+             }
+             return function.apply(param).toString();
+         }).orElse(Optional.ofNullable(nullFunction).map(Supplier::get).orElse(defaultNullFunction.get()));
+    }
+
+    public static void registeNullFuntion(Supplier<String> nullFunction) {
+        MailUtils.nullFunction = nullFunction;
+    }
+
+    public static <T> void registeDataDealFuntion(Class<T> clazz, Function<T, String> function) {
+        dataTypeFunction.put(clazz, function);
     }
 }
