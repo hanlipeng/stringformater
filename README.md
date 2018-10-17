@@ -2,7 +2,8 @@
 本意是想找个邮件的模板工具.找了很多没找到.就准备自己写一个;
 ## 更新
 ### 1.0
-添加了两个方法来处理null值和数据类型值处理的注册方法;  
+- 添加了demo,在test文件中
+- 添加了两个方法来处理null值和数据类型值处理的注册方法;  
 ```java
         MailUtils.registeNullFuntion(() -> "null");
         MailUtils.registeDataDealFuntion(Long.class, o -> "Long " + o);
